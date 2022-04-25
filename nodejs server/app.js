@@ -4,6 +4,10 @@ var cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+const multer = require('multer');
+const fs = require("fs");
+const {promisify} = require("util");
+const pipeline = promisify(require("stream").pipeline);
 const app = express()
 
 const port = 5000
@@ -21,6 +25,7 @@ origin: 'http://localhost:3000',
 credentials:true,
 })
 );
+app.use(bodyParser.json());//add this line
 
 app.get("/", (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*")
@@ -31,7 +36,20 @@ app.get("/", (req, res) => {
      });
 
 
-app.use(bodyParser.json());//add this line
+const upload =multer();
+app.post("/upload",upload.single("file"),async function(req,res,next){
+
+const{file,body:{name}}=req;
+if(file.detectedFileExtension!=".jpg")next(new Error("invalid file type"));
+
+const filename = name + Math.floor(math.random()*1000) + file.detectedFileExtension;
+await pipeline(file.stream,fs.createWriteStream(`${__dirname}/./public/images/${filename}`))
+
+res.send("file uploaded as" + filename)
+});
+
+
+
 
 let NFTs = [];
 
